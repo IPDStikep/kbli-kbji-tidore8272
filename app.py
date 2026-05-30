@@ -11,8 +11,8 @@ st.write("Aplikasi ini berjalan 100% lokal tanpa menggunakan API Key (Gratis & U
 @st.cache_data
 def load_data():
     # Membaca file CSV yang sudah di-upload ke GitHub
-    df_kbli = pd.read_csv("data_kbli.csv")
-    df_ji = pd.read_csv("data_kbji.csv")
+    df_kbli = pd.read_csv("data_kbli.csv", sep=None, engine='python')
+    df_ji = pd.read_csv("data_kbji.csv", sep=None, engine='python')
     return df_kbli, df_ji
 
 # Load data ke aplikasi
