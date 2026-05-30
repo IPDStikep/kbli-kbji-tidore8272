@@ -1,6 +1,13 @@
 import streamlit as st
 import google.generativeai as genai
 
+# Tambahkan baris ini sebelum memanggil model!
+genai.api_version = "v1" 
+
+# Baru setelah itu konfigurasi API Key dan Model
+genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+model = genai.GenerativeModel('gemini-1.5-flash')
+
 # Konfigurasi Tampilan Website
 st.set_page_config(page_title="AI KBLI-KBJI Maluku Utara", page_icon="📊", layout="centered")
 
@@ -35,9 +42,9 @@ if submit_button:
         with st.spinner("Menghitung dan mencocokkan kode dengan standar BPS... Mohon tunggu..."):
             try:
                 # Menggunakan model Gemini terbaru yang stabil
-                model = genai.GenerativeModel('gemini-1.5-flash-latest')
+                # model = genai.GenerativeModel('gemini-1.5-flash-latest')
                 # atau jika ingin pakai versi terbaru:
-                # model = genai.GenerativeModel('gemini-2.5-flash')
+                model = genai.GenerativeModel('gemini-2.5-flash')
                 
                 # Instruksi khusus (Prompt Engineering) agar AI paham konteks lokal Malut dan BPS
                 prompt = f"""
