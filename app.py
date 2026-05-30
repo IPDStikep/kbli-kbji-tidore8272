@@ -1,81 +1,57 @@
 import streamlit as st
-import pandas as pd
-import re
+import google.generativeai as genai
+import os
 
-# Pengaturan halaman
-st.set_page_config(page_title="Konsultasi KBLI & KBJI Tidore", page_icon="🔮", layout="wide")
+# 1. Pengaturan Halaman Tab Browser
+st.set_page_config(page_title="Konsultasi AI KBLI & KBJI", page_icon="🔮", layout="wide")
 
-st.title("🔮 Konsultasi Pintar KBLI & KBJI Kota Tidore Kepulauan")
-st.write("Tuliskan cerita, rencana usaha, atau pengalaman kerja Anda di bawah ini. Sistem akan otomatis mencari kode yang cocok!")
+st.title("🔮 Konsultasi Pintar KBLI & KBJI (Powered by Gemini AI)")
+st.write("Ceritakan rencana usaha atau pekerjaan Anda, dan AI akan menganalisis serta memberikan kode KBLI 2020/2025 & KBJI yang paling cocok.")
 
-# Fungsi Load Data dengan proteksi error data berantakan
-@st.cache_data
-def load_data():
-    df_kbli = pd.read_csv("data_kbli.csv", on_bad_lines='skip')
-    df_ji = pd.read_csv("data_kbji.csv", on_bad_lines='skip')
-    return df_kbli, df_ji
+# 2. Paksa library menggunakan API v1 agar tidak error 404
+genai.api_version = "v1"
 
+# 3. Mengambil API Key dengan aman dari Streamlit Secrets
 try:
-    kbli_df, kbji_df = load_data()
+    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    model = genai.GenerativeModel('gemini-2.5-flash')
 except Exception as e:
-    st.error(f"Gagal memuat database: {e}")
+    st.error("Waduh, API Key Gemini belum terpasang dengan benar di Streamlit Secrets!")
     st.stop()
 
-# --- BAGIAN INPUT CERITA ---
-st.subheader("✍️ Ceritakan Rencana Usaha atau Pekerjaan Anda")
+# 4. Bagian Input Cerita Pengguna
+st.subheader("✍️ Tuliskan Cerita / Rencana Bisnis Anda")
 cerita_user = st.text_area(
-    "Contoh: 'Saya ingin membuka warung kopi modern yang juga menjual kue, lalu saya mau merekrut seorang barista dan kasir untuk membantu saya.'",
+    "Contoh: 'Saya mau bikin usaha jualan kopi keliling pakai motor, terus saya juga butuh orang buat bantu bungkus kopinya dan sopir.'",
     height=150
 )
 
-# Fungsi untuk membersihkan teks dan mengambil kata-kata penting (minimal 3 huruf)
-def ambil_kata_kunci(teks):
-    teks = teks.lower()
-    # Menghapus tanda baca
-    teks = re.sub(r'[^\w\s]', ' ', teks)
-    kata_list = teks.split()
-    # Filter kata-kata umum (stopwards) yang tidak berguna untuk pencarian KBLI/KBJI
-    kata_dibuang = {
-        'saya', 'ingin', 'membuka', 'yang', 'juga', 'menjual', 'lalu', 'mau', 'merekrut', 
-        'seorang', 'dan', 'untuk', 'membantu', 'bisa', 'akan', 'dengan', 'atau', 'di', 'ke'
-    }
-    kata_kunci = [kata for kata in kata_list if kata not in kata_dibuang and len(kata) > 2]
-    return list(set(kata_kunci)) # menghilangkan kata yang duplikat
-
-# --- PROSES DETEKSI OTOMATIS ---
-if cerita_user:
-    kata_kunci_user = ambil_kata_kunci(cerita_user)
-    
-    if kata_kunci_user:
-        st.info(f"🔎 **Kata kunci yang terdeteksi dari cerita Anda:** {', '.join(kata_kunci_user)}")
-        
-        # Membuat layout 2 kolom untuk hasil
-        kolom1, kolom2 = st.columns(2)
-        
-        # 1. SCAN KBLI
-        with kolom1:
-            st.markdown("### 🏢 Rekomendasi KBLI (Usaha)")
-            # Mencari baris di CSV yang mengandung salah satu dari kata kunci
-            kondisi_kbli = kbli_df.astype(str).apply(lambda x: x.str.contains('|'.join(kata_kunci_user), case=False, na=False)).any(axis=1)
-            hasil_kbli = kbli_df[kondisi_kbli]
-            
-            if not hasil_kbli.empty:
-                st.success(f"Ditemukan {len(hasil_kbli)} KBLI yang relevan:")
-                st.dataframe(hasil_kbli, use_container_width=True)
-            else:
-                st.warning("Tidak ditemukan kode KBLI yang cocok dengan kata kunci cerita Anda.")
+# Tombol untuk memicu AI berpikir (wajib ada untuk menghemat kuota gratisan)
+if st.button("Minta Rekomendasi AI"):
+    if cerita_user:
+        with st.spinner("AI sedang menganalisis cerita Anda, mohon tunggu..."):
+            try:
+                # Membuat Prompt (perintah) yang jelas untuk AI
+                prompt_instruksi = f"""
+                Anda adalah seorang ahli klasifikasi bisnis dan ketenagakerjaan di Indonesia.
+                Berdasarkan cerita berikut: "{cerita_user}"
                 
-        # 2. SCAN KBJI
-        with kolom2:
-            st.markdown("### 💼 Rekomendasi KBJI (Jabatan/Pekerjaan)")
-            # Mencari baris di CSV yang mengandung salah satu dari kata kunci
-            kondisi_kbji = kbji_df.astype(str).apply(lambda x: x.str.contains('|'.join(kata_kunci_user), case=False, na=False)).any(axis=1)
-            hasil_kbji = kbji_df[kondisi_kbji]
-            
-            if not hasil_kbji.empty:
-                st.success(f"Ditemukan {len(hasil_kbji)} KBJI yang relevan:")
-                st.dataframe(hasil_kbji, use_container_width=True)
-            else:
-                st.warning("Tidak ditemukan kode KBJI yang cocok dengan kata kunci cerita Anda.")
+                Tolong berikan rekomendasi:
+                1. Kode KBLI (Klasifikasi Baku Lapangan Usaha Indonesia) yang paling cocok beserta penjelasan singkat fungsinya.
+                2. Kode KBJI (Klasifikasi Baku Jabatan Indonesia) untuk profesi/pekerjaan yang disebutkan atau relevan beserta penjelasannya.
+                
+                Format jawaban harus rapi menggunakan poin-poin atau tabel Markdown agar mudah dibaca oleh pengguna.
+                """
+                
+                # Memanggil Gemini AI
+                response = model.generate_content(prompt_instruksi)
+                
+                # Menampilkan Hasil dari AI
+                st.success("✨ Hasil Analisis AI:")
+                st.markdown(response.text)
+                
+            except Exception as e:
+                # Menangkap error jika kuota habis (Error 429) atau error lainnya
+                st.error(f"Gagal mendapatkan respon dari AI. Error: {e}")
     else:
-        st.warning("Cerita terlalu pendek atau belum mengandung kata kunci yang spesifik.")
+        st.warning("Silakan tulis ceritanya terlebih dahulu sebelum menekan tombol!")
