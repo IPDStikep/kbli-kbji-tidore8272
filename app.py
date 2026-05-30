@@ -13,9 +13,9 @@ except Exception as e:
     st.error(f"Gagal inisialisasi API Key: {e}")
 
 # Setup halaman Streamlit
-st.set_page_config(page_title="AI KBLI-KBJI Malut", page_icon="🌋", layout="centered")
+st.set_page_config(page_title="KBLI-KBJI BPS Kota Tidore Kepulauan", page_icon="🌋", layout="centered")
 
-st.title("Asisten KBLI & KBJI AI 🌋")
+st.title("Asisten KBLI & KBJI🌋")
 st.subheader("BPS Kota Tidore Kepulauan")
 st.write("Sistem otomatis pencarian kode KBLI dan KBJI berdasarkan cerita kasus petugas di lapangan.")
 
@@ -25,7 +25,7 @@ st.markdown("---")
 kasus_lapangan = st.text_area(
     "Cerita Kasus dari Lapangan (PML):", 
     placeholder="Contoh: Responden adalah seorang ibu di Tidore yang menerima pesanan pembuatan sarung tenun khas daerah di rumahnya, kadang dibantu anak perempuan tanpa digaji...",
-    height=150
+    height=100
 )
 
 # Tombol Proses
