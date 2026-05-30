@@ -1,80 +1,51 @@
 import streamlit as st
-import google.generativeai as genai
+import pandas as pd
 
-# Tambahkan baris ini sebelum memanggil model!
-genai.api_version = "v1" 
+# Atur judul halaman di tab browser
+st.set_page_config(page_title="Pencarian KBLI & KBJI Tidore", page_icon="🏢", layout="wide")
 
-# Baru setelah itu konfigurasi API Key dan Model
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-model = genai.GenerativeModel('gemini-1.5-flash')
+st.title("🏢 Sistem Pencarian KBLI (2025) & KBJI (2014) Tidore")
+st.write("Aplikasi ini berjalan 100% lokal tanpa menggunakan API Key (Gratis & Unlimited).")
 
-# Konfigurasi Tampilan Website
-st.set_page_config(page_title="AI KBLI-KBJI Maluku Utara", page_icon="📊", layout="centered")
+# Fungsi untuk membaca data dengan Fitur Cache agar aplikasi super cepat
+@st.cache_data
+def load_data():
+    # Membaca file CSV yang sudah di-upload ke GitHub
+    df_kbli = pd.read_csv("data_kbli.csv")
+    df_ji = pd.read_csv("data_kbji.csv")
+    return df_kbli, df_ji
 
-# Mengambil API Key secara aman dari sistem Streamlit
-GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY", "")
+# Load data ke aplikasi
+try:
+    kbli_df, kbji_df = load_data()
+except Exception as e:
+    st.error(f"Gagal membaca file CSV. Pastikan nama file sesuai. Error: {e}")
+    st.stop()
 
-if not GEMINI_API_KEY:
-    st.error("Waduh, API Key Gemini belum dipasang di Settings Streamlit! Tolong dimasukkan dulu ya.")
-else:
-    genai.configure(api_key=GEMINI_API_KEY)
+# Membuat Menu Tab di Streamlit
+tab1, tab2 = st.tabs(["🔍 Cari KBLI (Usaha)", "💼 Cari KBJI (Jabatan/Pekerjaan)"])
 
-# Desain Header Website
-st.title("📊 Asisten KBLI & KBJI Digital")
-st.subheader("BPS Kota Tidore Kepulauan")
-st.markdown("Aplikasi ini membantu PML menentukan kode KBLI dan KBJI berdasarkan cerita atau rincian tugas responden di lapangan.")
-st.markdown("---")
+# === TAB 1: PENCARIAN KBLI ===
+with tab1:
+    st.header("Pencarian Kode KBLI 2025")
+    keyword_kbli = st.text_input("Masukkan kata kunci usaha (Contoh: kopi, warung, komputer):", key="kbli_input")
+    
+    if keyword_kbli:
+        # Mencari kata kunci di semua kolom (mengabaikan huruf besar/kecil)
+        # SESEUKAN 'nama_kbli' dengan nama kolom judul di CSV-mu
+        hasil_kbli = kbli_df[kbli_df.astype(str).apply(lambda x: x.str.contains(keyword_kbli, case=False)).any(axis=1)]
+        
+        st.write(f"Ditemukan {len(hasil_kbli)} data yang cocok:")
+        st.dataframe(hasil_kbli, use_container_width=True)
 
-# Form Input untuk PML
-with st.form("form_pencarian"):
-    cerita = st.text_area(
-        "Cerita / Uraian Tugas Responden:",
-        placeholder="Contoh: Dia punya perahu sendiri dan sering memancing ikan cakalang di laut Halmahera, lalu hasilnya dijual ke pengepul di pelabuhan.",
-        height=150
-    )
-    submit_button = st.form_submit_button(label="🔍 Analisis Kode Sekarang")
-
-# Proses Analisis AI setelah tombol diklik
-if submit_button:
-    if not cerita.strip():
-        st.warning("Ceritanya diisi dulu ya, jangan dikosongkan.")
-    else:
-        with st.spinner("Menghitung dan mencocokkan kode dengan standar BPS... Mohon tunggu..."):
-            try:
-                # Menggunakan model Gemini terbaru yang stabil
-                # model = genai.GenerativeModel('gemini-1.5-flash-latest')
-                # atau jika ingin pakai versi terbaru:
-                model = genai.GenerativeModel('gemini-2.5-flash')
-                
-                # Instruksi khusus (Prompt Engineering) agar AI paham konteks lokal Malut dan BPS
-                prompt = f"""
-                Anda adalah seorang pakar metodologi sensus/survei di Badan Pusat Statistik (BPS) Indonesia yang bertugas di Provinsi Maluku Utara.
-                Tugas Anda adalah menganalisis cerita/uraian kegiatan berikut dan menentukan Kode KBLI (Klasifikasi Baku Lapangan Usaha Indonesia) tahun terbaru dan Kode KBJI (Klasifikasi Baku Jabatan Indonesia) yang paling tepat beserta deskripsinya.
-                Pahami juga istilah lokal Maluku Utara seperti pajeko, jolor, pala, cengkeh, dlsb jika ada.
-
-                Cerita Responden: "{cerita}"
-
-                Berikan jawaban langsung dalam format Markdown yang rapi dan menarik seperti di bawah ini:
-                
-                ### 🏭 Hasil Analisis KBLI:
-                * **Kode KBLI:** [Berikan kode 5 digit yang paling relevan]
-                * **Judul KBLI:** [Nama judul KBLI]
-                * **Deskripsi Singkat:** [Alasan mengapa kode ini dipilih berdasarkan cerita]
-
-                ### 👔 Hasil Analisis KBJI:
-                * **Kode KBJI:** [Berikan kode 4 digit yang paling relevan]
-                * **Judul KBJI:** [Nama judul KBJI]
-                * **Deskripsi Singkat:** [Alasan mengapa kode ini dipilih berdasarkan cerita]
-                
-                ---
-                *Catatan: Jawaban AI ini bersifat membantu. PML disarankan tetap melakukan verifikasi kembali ke buku pedoman resmi jika menemui keraguan ekstrem.*
-                """
-                
-                response = model.generate_content(prompt)
-                
-                # Menampilkan Hasil ke Layar
-                st.success("Selesai! Berikut adalah rekomendasi kodenya:")
-                st.markdown(response.text)
-                
-            except Exception as e:
-                st.error(f"Aduh, ada error sistem nih: {e}")
+# === TAB 2: PENCARIAN KBJI ===
+with tab2:
+    st.header("Pencarian Kode KBJI 2014")
+    keyword_kbji = st.text_input("Masukkan kata kunci jabatan (Contoh: manajer, programmer, guru):", key="kbji_input")
+    
+    if keyword_kbji:
+        # Mencari kata kunci di semua kolom
+        hasil_kbji = kbji_df[kbji_df.astype(str).apply(lambda x: x.str.contains(keyword_kbji, case=False)).any(axis=1)]
+        
+        st.write(f"Ditemukan {len(hasil_kbji)} data yang cocok:")
+        st.dataframe(hasil_kbji, use_container_width=True)
