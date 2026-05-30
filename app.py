@@ -35,7 +35,9 @@ if submit_button:
         with st.spinner("Menghitung dan mencocokkan kode dengan standar BPS... Mohon tunggu..."):
             try:
                 # Menggunakan model Gemini terbaru yang stabil
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                model = genai.GenerativeModel('gemini-1.5-flash-latest')
+                # atau jika ingin pakai versi terbaru:
+                # model = genai.GenerativeModel('gemini-2.5-flash')
                 
                 # Instruksi khusus (Prompt Engineering) agar AI paham konteks lokal Malut dan BPS
                 prompt = f"""
