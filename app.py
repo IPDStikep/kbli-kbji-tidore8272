@@ -6,7 +6,7 @@ import os
 st.set_page_config(page_title="KBLI & KBJI", page_icon="🔮", layout="wide")
 
 st.title("🔮 Konsultasi Pintar KBLI & KBJI (BPS Kota Tidore Kepulauan)")
-st.write("Deskripsi/Ceritakan Pekerjaan.")
+# st.write("Deskripsi/Ceritakan Pekerjaan.")
 
 # 2. Paksa library menggunakan API v1 agar tidak error 404
 genai.api_version = "v1"
@@ -20,10 +20,10 @@ except Exception as e:
     st.stop()
 
 # 4. Bagian Input Cerita Pengguna
-st.subheader("✍️ Tuliskan Cerita / Rencana Bisnis Anda")
+st.subheader("✍️ Tuliskan Cerita Anda")
 cerita_user = st.text_area(
-    "Contoh: 'Saya mau bikin usaha jualan kopi keliling pakai motor, terus saya juga butuh orang buat bantu bungkus kopinya dan sopir.'",
-    height=150
+    "Contoh: 'Dia bekerja sebagai Pemilik Toko Sembako, Menjual Sembako'",
+    height=100
 )
 
 # Tombol untuk memicu AI berpikir (wajib ada untuk menghemat kuota gratisan)
