@@ -3,10 +3,10 @@ import google.generativeai as genai
 import os
 
 # 1. Pengaturan Halaman Tab Browser
-st.set_page_config(page_title="Konsultasi AI KBLI & KBJI", page_icon="🔮", layout="wide")
+st.set_page_config(page_title="KBLI & KBJI", page_icon="🔮", layout="wide")
 
-st.title("🔮 Konsultasi Pintar KBLI & KBJI (Powered by Gemini AI)")
-st.write("Ceritakan rencana usaha atau pekerjaan Anda, dan AI akan menganalisis serta memberikan kode KBLI 2020/2025 & KBJI yang paling cocok.")
+st.title("🔮 Konsultasi Pintar KBLI & KBJI (BPS Kota Tidore Kepulauan)")
+st.write("Deskripsi/Ceritakan Pekerjaan.")
 
 # 2. Paksa library menggunakan API v1 agar tidak error 404
 genai.api_version = "v1"
