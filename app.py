@@ -21,8 +21,8 @@ else:
 
 # Desain Header Website
 st.title("📊 Asisten KBLI & KBJI Digital")
-st.subheader("BPS Provinsi Maluku Utara")
-st.markdown("Aplikasi ini membantu PML/Koseka menentukan kode KBLI dan KBJI berdasarkan cerita atau rincian tugas responden di lapangan.")
+st.subheader("BPS Kota Tidore Kepulauan")
+st.markdown("Aplikasi ini membantu PML menentukan kode KBLI dan KBJI berdasarkan cerita atau rincian tugas responden di lapangan.")
 st.markdown("---")
 
 # Form Input untuk PML
